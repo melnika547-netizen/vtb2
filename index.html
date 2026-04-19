@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VTB Pay</title>
+
+<style>
+body {
+  margin: 0;
+  height: 100vh;
+  background: radial-gradient(circle at top, #0a0f2c, #05060a);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: Arial, sans-serif;
+  color: white;
+  overflow: hidden;
+}
+
+/* верхний текст */
+.top {
+  position: absolute;
+  top: 25px;
+  opacity: 0.8;
+  font-size: 18px;
+  text-align: center;
+}
+
+/* сцена */
+.scene {
+  perspective: 1000px;
+}
+
+/* 💳 карта */
+.card {
+  width: 340px;
+  height: 210px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #0b57d0, #1e90ff);
+  position: relative;
+  padding: 20px;
+  box-sizing: border-box;
+  cursor: pointer;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+  overflow: hidden;
+  transform-style: preserve-3d;
+  transition: transform 0.2s ease;
+}
+
+/* ripple эффект */
+.ripple {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.5);
+  transform: scale(0);
+  animation: ripple 0.6s linear;
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(25);
+    opacity: 0;
+  }
+}
+
+/* ВТБ логотип */
+.vtb {
+  position: absolute;
+  top: 12px;
+  right: 15px;
+}
+
+/* ГОТОВО */
+.status {
+  position: absolute;
+  top: 55px;
+  left: 20px;
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  opacity: 0.9;
+}
+
+/* NFC */
+.nfc {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+}
+
+/* МИР */
+.mir {
+  position: absolute;
+  bottom: 15px;
+  left: 20px;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+/* 3D hover будет через JS */
+
+/* 🍏 blur экран */
+.success {
+  position: absolute;
+  width: 340px;
+  height: 210px;
+  border-radius: 22px;
+
+  background: rgba(20, 20, 30, 0.4);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  display: none;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+}
+
+.success h1 {
+  color: #3dff8b;
+  margin: 0;
+}
+</style>
+</head>
+
+<body>
+
+<div class="top">Поднесите карту для оплаты</div>
+
+<div class="scene">
+
+  <div class="card" id="card"
+       onmousemove="tilt(event)"
+       onmouseleave="resetTilt()"
+       onclick="pay(event)">
+
+    <!-- ВТБ -->
+    <div class="vtb">
+      <svg width="60" height="24" viewBox="0 0 120 40">
+        <defs>
+          <linearGradient id="g" x1="0" x2="1">
+            <stop offset="0%" stop-color="#fff"/>
+            <stop offset="100%" stop-color="#bfe3ff"/>
+          </linearGradient>
+        </defs>
+        <text x="0" y="30" font-size="28" font-weight="bold" fill="url(#g)">ВТБ</text>
+      </svg>
+    </div>
+
+    <div class="status" id="status">ГОТОВО</div>
+    <div class="nfc">📶 NFC</div>
+    <div class="mir">МИР</div>
+
+  </div>
+
+  <!-- успех -->
+  <div class="success" id="success">
+    <h1>✔ Оплата выполнена</h1>
+    <p>Apple Pay стиль</p>
+  </div>
+
+</div>
+
+<script>
+
+const card = document.getElementById("card");
+
+/* 💳 3D наклон */
+function tilt(e) {
+  const rect = card.getBoundingClientRect();
+
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  const centerX = rect.width / 2;
+  const centerY = rect.height / 2;
+
+  const rotateX = ((y - centerY) / 10) * -1;
+  const rotateY = (x - centerX) / 10;
+
+  card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+}
+
+/* сброс */
+function resetTilt() {
+  card.style.transform = "rotateX(0deg) rotateY(0deg)";
+}
+
+/* 💸 оплата */
+function pay(e) {
+  const status = document.getElementById("status");
+  const success = document.getElementById("success");
+
+  /* ripple */
+  const ripple = document.createElement("span");
+  ripple.classList.add("ripple");
+
+  const rect = card.getBoundingClientRect();
+  ripple.style.left = (e.clientX - rect.left) + "px";
+  ripple.style.top = (e.clientY - rect.top) + "px";
+
+  card.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 600);
+
+  /* вибрация */
+  if (navigator.vibrate) navigator.vibrate(120);
+
+  status.innerText = "ПОДТВЕРЖДЕНИЕ...";
+
+  setTimeout(() => {
+    status.innerText = "ОПЛАТА...";
+  }, 700);
+
+  setTimeout(() => {
+    card.style.display = "none";
+    success.style.display = "flex";
+  }, 1400);
+}
+
+</script>
+
+</body>
+</html>
