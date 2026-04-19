@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VTB Pay Terminal</title>
+
+<style>
+body {
+  margin: 0;
+  height: 100vh;
+  background: radial-gradient(circle at top, #0a0f2c, #05060a);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: Arial, sans-serif;
+  color: white;
+  overflow: hidden;
+}
+
+.top {
+  position: absolute;
+  top: 25px;
+  opacity: 0.8;
+  font-size: 18px;
+}
+
+.scene {
+  perspective: 1000px;
+}
+
+/* КАРТА */
+.card {
+  width: 340px;
+  height: 210px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #0b57d0, #1e90ff);
+  position: relative;
+  padding: 20px;
+  box-sizing: border-box;
+  cursor: pointer;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+  overflow: hidden;
+}
+
+/* ВТБ */
+.vtb {
+  position: absolute;
+  top: 12px;
+  right: 15px;
+  font-size: 22px;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+/* статус */
+.status {
+  position: absolute;
+  top: 55px;
+  left: 20px;
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+/* NFC */
+.nfc {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+}
+
+/* МИР */
+.mir {
+  position: absolute;
+  bottom: 15px;
+  left: 20px;
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+/* ripple */
+.ripple {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.5);
+  transform: scale(0);
+  animation: ripple 0.6s linear;
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(25);
+    opacity: 0;
+  }
+}
+
+/* фон терминала */
+.terminal-bg {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle, rgba(0,0,0,0.6), rgba(0,0,0,0.95));
+  display: none;
+  z-index: 5;
+}
+
+/* анимация ухода карты */
+.card.pay-anim {
+  animation: toTerminal 1.4s ease forwards;
+}
+
+@keyframes toTerminal {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.6) translateY(30px); }
+  100% { transform: scale(0.1) translateY(-320px); opacity: 0; }
+}
+
+/* успех */
+.success {
+  position: fixed;
+  inset: 0;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(18px);
+}
+
+.success-box {
+  text-align: center;
+  padding: 30px 40px;
+  border-radius: 20px;
+  background: rgba(20,20,30,0.6);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+}
+
+.success-box h1 {
+  color: #3dff8b;
+  margin: 0;
+}
+</style>
+</head>
+
+<body>
+
+<div class="top">Поднесите карту для оплаты</div>
+
+<div class="scene">
+  <div class="card" id="card" onclick="pay(event)">
+
+    <div class="vtb">ВТБ</div>
+
+    <div class="status" id="status">ГОТОВО</div>
+
+    <div class="nfc">📶 NFC</div>
+    <div class="mir">МИР</div>
+
+  </div>
+</div>
+
+<div class="terminal-bg" id="terminalBg"></div>
+
+<div class="success" id="success">
+  <div class="success-box">
+    <h1>✔ Оплата выполнена</h1>
+    <p>Транзакция завершена</p>
+  </div>
+</div>
+
+<script>
+
+const card = document.getElementById("card");
+const status = document.getElementById("status");
+const success = document.getElementById("success");
+const terminalBg = document.getElementById("terminalBg");
+
+let isPaying = false;
+
+function pay(e) {
+
+  if (isPaying) return;
+  isPaying = true;
+
+  // ripple эффект
+  const ripple = document.createElement("span");
+  ripple.classList.add("ripple");
+
+  const rect = card.getBoundingClientRect();
+  ripple.style.left = (e.clientX - rect.left) + "px";
+  ripple.style.top = (e.clientY - rect.top) + "px";
+
+  card.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 800);
+
+  if (navigator.vibrate) navigator.vibrate(120);
+
+  // 1️⃣ связь
+  status.innerText = "СВЯЗЬ С ТЕРМИНАЛОМ...";
+  terminalBg.style.display = "block";
+
+  setTimeout(() => {
+    // 2️⃣ обработка
+    status.innerText = "ОБРАБОТКА ПЛАТЕЖА...";
+  }, 1500);
+
+  setTimeout(() => {
+    // 3️⃣ подтверждение
+    status.innerText = "ПОДТВЕРЖДЕНИЕ БАНКА...";
+  }, 3000);
+
+  setTimeout(() => {
+    // 4️⃣ оплата (анимация)
+    card.classList.add("pay-anim");
+  }, 4500);
+
+  setTimeout(() => {
+    terminalBg.style.display = "none";
+    card.style.display = "none";
+    success.style.display = "flex";
+  }, 6200);
+}
+
+</script>
+
+</body>
+</html>
